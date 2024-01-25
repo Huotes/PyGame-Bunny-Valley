@@ -1,6 +1,7 @@
 import pygame
 from settings import *
 from support import *
+from timer import Timer
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, group):
@@ -10,14 +11,25 @@ class Player(pygame.sprite.Sprite):
         self.status = 'down_idle'
         self.frame_index = 0
 
-        # general setup
+        # configurações gerais
         self.image = self.animations[self.status][self.frame_index]
         self.rect = self.image.get_rect(center=pos)
 
-        # movement attributes
+        # atributos de movimentação
         self.direction = pygame.math.Vector2()
         self.pos = pygame.math.Vector2(self.rect.center)
         self.speed = 200
+
+        # temporizadores
+        self.timers = {
+            'tool use': Timer(350, self.use_tool)
+        }
+
+        # ferramentas
+        self.selected_tool = 'axe'
+
+    def use_tool(self):
+        print(self.selected_tool)
 
     def import_assets(self):
         self.animations = {'up': [], 'down': [], 'left': [], 'right': [],
@@ -40,6 +52,7 @@ class Player(pygame.sprite.Sprite):
     def input(self):
         keys = pygame.key.get_pressed()
 
+        # directionamentos
         if keys[pygame.K_UP]:
             self.direction.y = -1
             self.status = 'up'
@@ -58,11 +71,20 @@ class Player(pygame.sprite.Sprite):
         else:
             self.direction.x = 0
 
+        #uso de ferramentas
+        if keys[pygame.K_SPACE]:
+            #temporizador para o uso da ferramenta
+            self.timers['tool use'].activate()
+
     def get_status(self):
         #se o jogador nao esta se movendo:
         if self.direction.magnitude() == 0:
             #adiciona _idle ao status
             self.status = self.status.split('_')[0] + '_idle'
+
+        #uso de ferramentas
+        if self.timers['tool use'].active:
+            print('tool is being used')
 
     def move(self, dt):
         # normalizing a vector
